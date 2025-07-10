@@ -1,0 +1,25 @@
+# Ignore env files
+.env
+
+# Ignore Go build output
+*.exe
+*.out
+*.test
+
+# Ignore Go workspace files (optional)
+go.work
+go.work.sum
+
+# Ignore vendor dir (if not using Go modules)
+vendor/
+
+# Logs
+*.log
+
+# Editor settings
+.vscode/
+.idea/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
