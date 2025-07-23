@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 
 const MovieHero = ({ movie, index }) => {
   return (
     <div
       key={index}
-      className="flex-shrink-0 w-full h-screen relative snap-start"
+      className="flex-shrink-0 w-full h-[100%] relative snap-start"
     >
       {movie.backdrop_path && (
         <Image
@@ -18,7 +18,7 @@ const MovieHero = ({ movie, index }) => {
           unoptimized
         />
       )}
-      <div className="absolute bottom-0 left-0 w-full p-8 pb-20 bg-gradient-to-t from-black to-transparent text-white">
+      <div className="absolute bottom-0 left-0 w-full p-8 pb-30 bg-gradient-to-t from-black to-transparent text-white">
         <h1 className="text-4xl font-bold">{movie.title}</h1>
         <p className="text-lg max-w-2xl mt-2 line-clamp-3">{movie.overview}</p>
       </div>
@@ -28,7 +28,11 @@ const MovieHero = ({ movie, index }) => {
 
 export default function Hero() {
   const [movies, setMovies] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(1); // Start at 1 (first real slide)
+  const scrollRef = useRef(null);
+  const timeoutRef = useRef(null);
 
+  // Fetch movies from localStorage
   useEffect(() => {
     const stored = localStorage.getItem("movies");
     if (stored) {
@@ -43,19 +47,83 @@ export default function Hero() {
     }
   }, []);
 
-  if (movies.length === 0) {
+  const extendedMovies =
+    movies.length > 0 ? [movies[movies.length - 1], ...movies, movies[0]] : [];
+
+  // Initial scroll to first real slide
+  useEffect(() => {
+    if (scrollRef.current && extendedMovies.length > 0) {
+      scrollRef.current.scrollLeft = window.innerWidth;
+    }
+  }, [extendedMovies.length]); // Depend on length to run once
+
+  const handleScroll = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const width = window.innerWidth;
+    const rawIndex = Math.round(container.scrollLeft / width);
+
+    if (rawIndex === 0) {
+      // After a short delay, snap to the correct position
+      timeoutRef.current = setTimeout(() => {
+        container.style.scrollBehavior = "auto";
+        container.scrollLeft = movies.length * width;
+        setCurrentIndex(movies.length);
+        container.style.scrollBehavior = "smooth";
+      }, 50);
+    } else if (rawIndex === movies.length + 1) {
+      timeoutRef.current = setTimeout(() => {
+        container.style.scrollBehavior = "auto";
+        container.scrollLeft = width;
+        setCurrentIndex(1);
+        container.style.scrollBehavior = "smooth";
+      }, 50);
+    } else {
+      setCurrentIndex(rawIndex);
+    }
+  };
+
+  // Auto scroll every few seconds
+  useEffect(() => {
+    if (movies.length === 0) return;
+
+    const interval = setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+
+      setCurrentIndex((prevIndex) => {
+        const nextIndex = prevIndex + 1;
+        scrollRef.current?.scrollTo({
+          left: nextIndex * window.innerWidth,
+          behavior: "smooth",
+        });
+        return nextIndex > movies.length ? 1 : nextIndex;
+      });
+    }, 8000);
+
+    return () => clearInterval(interval);
+  }, [movies.length]);
+
+  if (extendedMovies.length === 0) {
     return (
-      <div className="relative w-full h-screen flex items-center justify-center text-white bg-black">
+      <div className="relative h-screen flex items-center justify-center text-white bg-black">
         <p>Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="flex overflow-x-auto snap-x scrollbar-hide snap-mandatory scroll-smooth">
-      {movies.map((movie, index) => {
-        return <MovieHero movie={movie} index={index} key={index} />
-      })}
+    <div
+      ref={scrollRef}
+      onScroll={handleScroll}
+      className="flex h-screen overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-hide"
+    >
+      {extendedMovies.map((movie, index) => (
+        <MovieHero movie={movie} index={index} key={index} />
+      ))}
     </div>
   );
 }
