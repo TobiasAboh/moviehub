@@ -1,19 +1,24 @@
 "use client";
-import { useState } from "react"
+import { useState } from "react";
+import { IoSearchSharp } from "react-icons/io5";
+import { useAuth } from "../context/AuthContext";
+
+import Profile from "./Profile";
 import Login from "./Login";
 import SignUp from "./SignUp";
-import { IoSearchSharp } from "react-icons/io5";
 
 
 export default function NavBar() {
-    const [loginModal, setLoginModal] = useState(false);
-    const [signUpModal, setSignUpModal] = useState(false);
-    const handleLogin = () => {
-        setLoginModal(true);
-    }
-    const handleSignUp = () => {
-        setSignUpModal(true);
-    }
+  const {loggedIn} = useAuth();
+  const [loginModal, setLoginModal] = useState(false);
+  const [signUpModal, setSignUpModal] = useState(false);
+  const handleLogin = () => {
+    setLoginModal(true);
+  };
+  const handleSignUp = () => {
+    setSignUpModal(true);
+  };
+  
   return (
     <div className="fixed top-0 w-full flex justify-start items-center bg-red-500/60 gap-5 md:gap-10 backdrop-blur-md z-50 pl-5 py-3">
       <h1 className="text-sm sm:text-md md:text-4xl">Movie Hub</h1>
@@ -27,17 +32,22 @@ export default function NavBar() {
           <IoSearchSharp className="absolute right-2 top-1 md:top-2 text-black w-6 h-6" />
         </div>
       </form>
-      <div className="flex gap-4">
-        <button onClick={handleLogin} className="bg-gray-500 p-2 text-xs md:text-base rounded-xl hover:bg-gray-400">
+      {loggedIn ? <Profile /> : <div className="flex gap-4">
+        <button
+          onClick={handleLogin}
+          className="bg-gray-500 p-2 text-xs md:text-base rounded-xl hover:bg-gray-400"
+        >
           Log In
         </button>
-        <button onClick={handleSignUp} className="bg-gray-500 p-2 text-xs md:text-base rounded-xl hover:bg-gray-400">
+        <button
+          onClick={handleSignUp}
+          className="bg-gray-500 p-2 text-xs md:text-base rounded-xl hover:bg-gray-400"
+        >
           Sign Up
         </button>
-      </div>
-      {loginModal && <Login toggleLogin={setLoginModal} />}
+      </div>}
+      {loginModal && <Login toggleLogin={setLoginModal}/>}
       {signUpModal && <SignUp toggleSignUp={setSignUpModal} />}
     </div>
-    
   );
 }
