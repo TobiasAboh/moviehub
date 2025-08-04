@@ -1,10 +1,14 @@
 import Image from "next/image";
-import HomePage from "./pages/HomePage";
+import Hero from "./components/Hero";
+import MovieGrid from "./components/MovieGrid";
 
 export default function Home() {
   return (
     <div className="h-screen">
-      <HomePage />
+      <div className="flex flex-col overflow-y-auto scrollbar-hide">
+            <Hero />
+            <MovieGrid />
+        </div>
     </div>
     
   );

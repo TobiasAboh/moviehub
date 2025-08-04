@@ -2,12 +2,14 @@
 import { useEffect, useState } from "react";
 import MovieCard from "./MovieCard";
 
+const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 export default function MovieGrid() {
   const [movies, setMovies] = useState([]);
   useEffect(() => {
     try {
       async function fetchData() {
-        const response = await fetch("http://localhost:8080/api/movies");
+        const response = await fetch(`${baseUrl}/movies`);
         const data = await response.json();
         console.log(data.results);
         setMovies(data.results);
@@ -15,7 +17,7 @@ export default function MovieGrid() {
       }
       fetchData();
     } catch (error) {
-      console.log(error);
+      console.log("huuuu", error);
     }
   }, []);
   return (
