@@ -1,9 +1,9 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 
-export default function MovieCard({ movie }) {
+export default function MovieCard({ movie, media_type }) {
   return (
-    <a href={`/movie/${movie.id}`} className="flex flex-col items-center justify-center bg-gray-600 h-[400px] overflow-hidden text-ellipsis rounded-xl">
+    <a href={`/content/${media_type}/${movie.id}`} className="flex flex-col items-center justify-center bg-gray-600 h-[400px] overflow-hidden text-ellipsis rounded-xl">
       <div className="relative w-full h-[100%]">
         <Image
           src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}

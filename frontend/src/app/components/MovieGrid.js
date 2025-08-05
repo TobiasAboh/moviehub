@@ -33,7 +33,7 @@ export default function MovieGrid() {
       >
         {movies.map((movie, index) => (
           <li key={index}>
-            <MovieCard movie={movie} />
+            <MovieCard movie={movie} media_type="movie" />
           </li>
         ))}
       </ul>

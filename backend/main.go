@@ -40,8 +40,9 @@ func main() {
 	r.POST("/login", handlers.Login)
 	r.GET("/profile", middleware.AuthMiddleware(), handlers.Profile)
 	r.GET("/movies", handlers.GetMovies)
-	r.GET("/movies/:id", handlers.Movie)
-	r.GET("/movies/:id/videos", handlers.MovieVideos)
+	r.GET("/content/:id", handlers.Movie)
+	r.GET("/content/:id/videos", handlers.MovieVideos)
+	r.GET("/search/multi", handlers.SearchMovies)
 
 	r.GET("/test", func(c *gin.Context) {
 		fmt.Println("Test route hit")
