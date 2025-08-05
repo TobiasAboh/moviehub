@@ -12,14 +12,14 @@ const MovieHero = ({ movie, index }) => {
       {movie.backdrop_path && (
         <Image
           src={`https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`}
-          alt={movie.title}
+          alt="poster"
           fill
           className="object-cover"
           unoptimized
         />
       )}
       <div className="absolute bottom-0 left-0 w-full p-8 pb-30 bg-gradient-to-t from-black to-transparent text-white">
-        <h1 className="text-4xl font-bold">{movie.title}</h1>
+        <h1 className="text-4xl font-bold">{movie.title ? movie.title : movie.name}</h1>
         <p className="text-lg max-w-2xl mt-2 line-clamp-3">{movie.overview}</p>
       </div>
     </div>
@@ -34,7 +34,7 @@ export default function Hero() {
 
   // Fetch movies from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem("movies");
+    const stored = localStorage.getItem("movie");
     if (stored) {
       try {
         const parsed = JSON.parse(stored);

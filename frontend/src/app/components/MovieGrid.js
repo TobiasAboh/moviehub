@@ -4,16 +4,16 @@ import MovieCard from "./MovieCard";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export default function MovieGrid() {
+export default function MovieGrid({ media_type }) {
   const [movies, setMovies] = useState([]);
   useEffect(() => {
     try {
       async function fetchData() {
-        const response = await fetch(`${baseUrl}/movies`);
+        const response = await fetch(`${baseUrl}/popular/${media_type}`);
         const data = await response.json();
         console.log(data.results);
         setMovies(data.results);
-        localStorage.setItem("movies", JSON.stringify(data.results));
+        localStorage.setItem(media_type, JSON.stringify(data.results));
       }
       fetchData();
     } catch (error) {
@@ -33,7 +33,7 @@ export default function MovieGrid() {
       >
         {movies.map((movie, index) => (
           <li key={index}>
-            <MovieCard movie={movie} media_type="movie" />
+            <MovieCard movie={movie} media_type={media_type} />
           </li>
         ))}
       </ul>

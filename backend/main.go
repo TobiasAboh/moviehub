@@ -39,7 +39,7 @@ func main() {
 	r.POST("/signup", handlers.SignUp)
 	r.POST("/login", handlers.Login)
 	r.GET("/profile", middleware.AuthMiddleware(), handlers.Profile)
-	r.GET("/movies", handlers.GetMovies)
+	r.GET("/popular/:type", handlers.GetMovies)
 	r.GET("/content/:id", handlers.Movie)
 	r.GET("/content/:id/videos", handlers.MovieVideos)
 	r.GET("/search/multi", handlers.SearchMovies)

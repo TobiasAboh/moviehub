@@ -6,10 +6,10 @@ export default function Home() {
   return (
     <div className="h-screen">
       <div className="flex flex-col overflow-y-auto scrollbar-hide">
-            <Hero />
-            <MovieGrid />
-        </div>
+        <Hero />
+        <MovieGrid media_type="movie" />
+        <MovieGrid media_type="tv" />
+      </div>
     </div>
-    
   );
 }

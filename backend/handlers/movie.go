@@ -59,12 +59,13 @@ func MovieVideos(c *gin.Context) {
 }
 
 func GetMovies(c *gin.Context) {
+	mediaType := c.Param("type")
 	w := c.Writer
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
 
 	apiKey := os.Getenv("TMDB_API_KEY")
-	url := fmt.Sprintf("https://api.themoviedb.org/3/movie/popular?api_key=%s", apiKey)
+	url := fmt.Sprintf("https://api.themoviedb.org/3/%s/popular?api_key=%s", mediaType, apiKey)
 
 	resp, err := http.Get(url)
 	if err != nil {

@@ -3,6 +3,8 @@ import { IoClose } from "react-icons/io5";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
 
+const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 export default function Login({ toggleLogin }) {
   const [email, setEmailInput] = useState("");
   const [password, setPassword] = useState("");
@@ -12,7 +14,7 @@ export default function Login({ toggleLogin }) {
 
   const handleLogin = async () => {
     try {
-      const response = await fetch("http://localhost:8080/login", {
+      const response = await fetch(`${baseUrl}/login`, {
         method: "POST",
         credentials: "include",
         headers: {

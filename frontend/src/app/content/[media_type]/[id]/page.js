@@ -3,6 +3,9 @@ import React from "react";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
+
+const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 export default function MoviePage({ params }) {
   const { media_type, id } = React.use(params);
   const [movie, setMovie] = useState({});
@@ -12,7 +15,7 @@ export default function MoviePage({ params }) {
     async function fetchVideo() {
       try {
         const response = await fetch(
-          `http://localhost:8080/content/${id}/videos?type=${media_type}`
+          `${baseUrl}/content/${id}/videos?type=${media_type}`
         );
         if (response.ok) {
           const data = await response.json();
@@ -65,7 +68,7 @@ export default function MoviePage({ params }) {
           </div>
         )}
         <div className="flex flex-col gap-2">
-          <h1>{movie.title}</h1>
+          <h1 className="font-bold text-3xl">{movie.title ? movie.title : movie.name}</h1>
           <p>{movie.overview}</p>
         </div>
       </div>
