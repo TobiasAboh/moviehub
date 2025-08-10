@@ -18,7 +18,7 @@ const MovieHero = ({ movie, index }) => {
           unoptimized
         />
       )}
-      <div className="absolute bottom-0 left-0 w-full p-8 pb-30 bg-gradient-to-t from-black to-transparent text-white">
+      <div className="absolute bottom-0 left-0 w-full p-8 pb-30 bg-gradient-to-t from-[#b72c2c] to-transparent text-white">
         <h1 className="text-4xl font-bold">{movie.title ? movie.title : movie.name}</h1>
         <p className="text-lg max-w-2xl mt-2 line-clamp-3">{movie.overview}</p>
       </div>

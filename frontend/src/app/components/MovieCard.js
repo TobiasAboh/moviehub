@@ -1,17 +1,74 @@
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaHeart, FaCheck } from "react-icons/fa";
 import { motion } from "framer-motion";
 
-export default function MovieCard({ movie, media_type }) {
-  const [liked, setLiked] = useState(false);
-  const [watched, setWatched] = useState(false);
+const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-  const handleLike = () => {
-    setLiked(!liked);
+export default function MovieCard({
+  movie,
+  media_type,
+  initialLiked = false,
+  initialWatched = false,
+}) {
+  const [liked, setLiked] = useState(initialLiked);
+  const [watched, setWatched] = useState(initialWatched);
+
+  // Sync when parent updates
+  useEffect(() => {
+    setLiked(initialLiked);
+  }, [initialLiked]);
+  useEffect(() => {
+    setWatched(initialWatched);
+  }, [initialWatched]);
+
+  const handleLike = async () => {
+    try {
+      const response = await fetch(
+        `${baseUrl}/like/${media_type}/${movie.id}`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            media_type: media_type,
+            movie_id: movie.id,
+            liked: !liked,
+          }),
+        }
+      );
+      if (response.ok) {
+        setLiked(!liked);
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
-  const handleWatch = () => {
-    setWatched(!watched);
+  const handleWatch = async () => {
+    try {
+      const response = await fetch(
+        `${baseUrl}/watch/${media_type}/${movie.id}`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            media_type: media_type,
+            movie_id: movie.id,
+            watched: !watched,
+          }),
+        }
+      );
+      if (response.ok) {
+        setWatched(!watched);
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const [title, setTitle] = useState(
@@ -20,7 +77,7 @@ export default function MovieCard({ movie, media_type }) {
   return (
     <a
       href={`/content/${media_type}/${movie.id}`}
-      className="flex flex-col items-center justify-center bg-gray-600 hover:bg-gray-500 h-[400px] overflow-hidden text-ellipsis rounded-xl"
+      className="flex flex-col items-center justify-center bg-black hover:bg-gray-800 h-[400px] overflow-hidden text-ellipsis rounded-xl"
     >
       <div className="relative w-full h-[100%]">
         <Image
@@ -45,7 +102,7 @@ export default function MovieCard({ movie, media_type }) {
           className="flex gap-2 p-2 rounded-lg border border-white hover:bg-white/50 hover:text-black"
         >
           {!watched ? "Add to Watched" : "Watched"}{" "}
-          <FaCheck className="text-xl" />
+          <FaCheck className={`text-xl ${watched ? "text-green-500" : ""}`} />
         </button>
         <button
           onClick={(e) => {

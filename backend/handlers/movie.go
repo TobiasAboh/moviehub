@@ -1,13 +1,16 @@
 package handlers
 
 import (
+	"database/sql"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
-	"io"
-	"encoding/json"
+	"strconv"
 
+	"github.com/TobiasAboh/moviehub/backend/db"
 	"github.com/gin-gonic/gin"
 )
 
@@ -108,4 +111,198 @@ func SearchMovies(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, filteredMovies)
+}
+
+// GetLikedMovies returns the authenticated user's liked movies
+func GetLikedMovies(c *gin.Context) {
+    email := c.GetString("email")
+    if email == "" {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+        return
+    }
+
+    var userID int
+    if err := db.DB.QueryRow("SELECT id FROM users WHERE email=$1", email).Scan(&userID); err != nil {
+        if err == sql.ErrNoRows {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+            return
+        }
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error"})
+        return
+    }
+
+    rows, err := db.DB.Query("SELECT media_type, movie_id FROM liked_movies WHERE user_id=$1", userID)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error"})
+        return
+    }
+    defer rows.Close()
+
+    type item struct {
+        MediaType string `json:"media_type"`
+        MovieID   int    `json:"movie_id"`
+    }
+    var items []item
+    for rows.Next() {
+        var it item
+        if err := rows.Scan(&it.MediaType, &it.MovieID); err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error"})
+            return
+        }
+        items = append(items, it)
+    }
+    c.JSON(http.StatusOK, gin.H{"items": items})
+}
+
+// GetWatchedMovies returns the authenticated user's watched movies
+func GetWatchedMovies(c *gin.Context) {
+    email := c.GetString("email")
+    if email == "" {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+        return
+    }
+
+    var userID int
+    if err := db.DB.QueryRow("SELECT id FROM users WHERE email=$1", email).Scan(&userID); err != nil {
+        if err == sql.ErrNoRows {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+            return
+        }
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error"})
+        return
+    }
+
+    rows, err := db.DB.Query("SELECT media_type, movie_id FROM watched_movies WHERE user_id=$1", userID)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error"})
+        return
+    }
+    defer rows.Close()
+
+    type item struct {
+        MediaType string `json:"media_type"`
+        MovieID   int    `json:"movie_id"`
+    }
+    var items []item
+    for rows.Next() {
+        var it item
+        if err := rows.Scan(&it.MediaType, &it.MovieID); err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error"})
+            return
+        }
+        items = append(items, it)
+    }
+    c.JSON(http.StatusOK, gin.H{"items": items})
+}
+
+// LikeMovie handles adding/removing a movie to the authenticated user's liked_movies
+func LikeMovie(c *gin.Context) {
+    email := c.GetString("email")
+    if email == "" {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+        return
+    }
+
+    // Resolve user id
+    var userID int
+    if err := db.DB.QueryRow("SELECT id FROM users WHERE email=$1", email).Scan(&userID); err != nil {
+        if err == sql.ErrNoRows {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+            return
+        }
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error"})
+        return
+    }
+
+    mediaType := c.Param("media")
+    idStr := c.Param("id")
+    movieID, err := strconv.Atoi(idStr)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid movie id"})
+        return
+    }
+
+    // Optional toggle based on request body
+    var body struct {
+        Liked *bool `json:"liked"`
+    }
+    _ = c.BindJSON(&body)
+
+    if body.Liked != nil && !*body.Liked {
+        // Remove like
+        if _, err := db.DB.Exec(
+            "DELETE FROM liked_movies WHERE user_id=$1 AND media_type=$2 AND movie_id=$3",
+            userID, mediaType, movieID,
+        ); err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to remove like"})
+            return
+        }
+        c.JSON(http.StatusOK, gin.H{"status": "unliked"})
+        return
+    }
+
+    // Add like idempotently
+    if _, err := db.DB.Exec(
+        "INSERT INTO liked_movies (user_id, media_type, movie_id) VALUES ($1,$2,$3) ON CONFLICT (user_id, media_type, movie_id) DO NOTHING",
+        userID, mediaType, movieID,
+    ); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to like movie"})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{"status": "liked"})
+}
+
+// WatchMovie handles adding/removing a movie to the authenticated user's watched_movies
+func WatchMovie(c *gin.Context) {
+    email := c.GetString("email")
+    if email == "" {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+        return
+    }
+
+    // Resolve user id
+    var userID int
+    if err := db.DB.QueryRow("SELECT id FROM users WHERE email=$1", email).Scan(&userID); err != nil {
+        if err == sql.ErrNoRows {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+            return
+        }
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error"})
+        return
+    }
+
+    mediaType := c.Param("media")
+    idStr := c.Param("id")
+    movieID, err := strconv.Atoi(idStr)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid movie id"})
+        return
+    }
+
+    // Optional toggle based on request body
+    var body struct {
+        Watched *bool `json:"watched"`
+    }
+    _ = c.BindJSON(&body)
+
+    if body.Watched != nil && !*body.Watched {
+        if _, err := db.DB.Exec(
+            "DELETE FROM watched_movies WHERE user_id=$1 AND media_type=$2 AND movie_id=$3",
+            userID, mediaType, movieID,
+        ); err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to remove watched"})
+            return
+        }
+        c.JSON(http.StatusOK, gin.H{"status": "unwatched"})
+        return
+    }
+
+    if _, err := db.DB.Exec(
+        "INSERT INTO watched_movies (user_id, media_type, movie_id) VALUES ($1,$2,$3) ON CONFLICT (user_id, media_type, movie_id) DO NOTHING",
+        userID, mediaType, movieID,
+    ); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add to watched"})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{"status": "watched"})
 }

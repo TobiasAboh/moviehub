@@ -3,8 +3,9 @@ package middleware
 import (
 	"github.com/TobiasAboh/moviehub/backend/utils"
 
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 func AuthMiddleware() gin.HandlerFunc {
@@ -15,13 +16,27 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		email, err := utils.VerifyJWT(tokenStr)
-		if err != nil {
+        claims, err := utils.VerifyJWT(tokenStr)
+        if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
 			return
 		}
 
-		c.Set("email", email)
+        // Extract email claim safely
+        var email string
+        if claims != nil {
+            if v, ok := claims["email"]; ok {
+                if s, ok := v.(string); ok {
+                    email = s
+                }
+            }
+        }
+        if email == "" {
+            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token payload"})
+            return
+        }
+
+        c.Set("email", email)
 		c.Next()
 	}
 }

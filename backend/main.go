@@ -43,6 +43,10 @@ func main() {
 	r.GET("/content/:id", handlers.Movie)
 	r.GET("/content/:id/videos", handlers.MovieVideos)
 	r.GET("/search/multi", handlers.SearchMovies)
+    r.POST("/like/:media/:id", middleware.AuthMiddleware(), handlers.LikeMovie)
+    r.POST("/watch/:media/:id", middleware.AuthMiddleware(), handlers.WatchMovie)
+    r.GET("/likes", middleware.AuthMiddleware(), handlers.GetLikedMovies)
+    r.GET("/watched", middleware.AuthMiddleware(), handlers.GetWatchedMovies)
 
 	r.GET("/test", func(c *gin.Context) {
 		fmt.Println("Test route hit")

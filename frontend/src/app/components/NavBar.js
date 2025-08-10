@@ -8,6 +8,62 @@ import Login from "./Login";
 import SignUp from "./SignUp";
 import SearchOptions from "./SearchOptions";
 
+const NavLinks = () => {
+  const hoverStyle =
+    "hover:scale-110 hover:cursor-pointer p-1 transition-all duration-100";
+  const activeStyle =
+    "scale-110 cursor-pointer p-1 shadow-md shadow-white transition-all duration-100";
+  const [activeTab, setActiveTab] = useState("Movies");
+
+  const handleTabClick = (tab) => {
+    setActiveTab(tab);
+    // Smooth scroll to section
+    if (tab === "Movies") {
+      const el = document.getElementById("movies-section");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    if (tab === "TV Shows") {
+      const el = document.getElementById("tv-section");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  return (
+    <div className="flex gap-4">
+      <a
+        onClick={() => handleTabClick("Movies")}
+        className={activeTab === "Movies" ? activeStyle : hoverStyle}
+      >
+        Movies
+      </a>
+      <a
+        onClick={() => handleTabClick("TV Shows")}
+        className={activeTab === "TV Shows" ? activeStyle : hoverStyle}
+      >
+        TV Shows
+      </a>
+      <a
+        onClick={() => handleTabClick("Watchlist")}
+        className={activeTab === "Watchlist" ? activeStyle : hoverStyle}
+      >
+        Watchlist
+      </a>
+      <a
+        onClick={() => handleTabClick("Liked")}
+        className={activeTab === "Liked" ? activeStyle : hoverStyle}
+      >
+        Liked
+      </a>
+      <a
+        onClick={() => handleTabClick("Watched")}
+        className={activeTab === "Watched" ? activeStyle : hoverStyle}
+      >
+        Watched
+      </a>
+    </div>
+  );
+};
+
 export default function NavBar() {
   const { loggedIn } = useAuth();
   const [search, setSearch] = useState("");
@@ -42,11 +98,14 @@ export default function NavBar() {
   const closeSearchOptions = () => {
     setShowRecommendations(false);
     setSearch("");
-  }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target)
+      ) {
         setShowRecommendations(false);
       }
     };
@@ -62,7 +121,10 @@ export default function NavBar() {
         <a href="/">
           <h1 className="text-sm sm:text-md md:text-4xl">Movie Hub</h1>
         </a>
-        <div className="relative flex flex-col w-[30%] sm:w-[40%] gap-2" ref={searchContainerRef}>
+        <div
+          className="relative flex flex-col w-[30%] sm:w-[40%] gap-2"
+          ref={searchContainerRef}
+        >
           <form className="flex justify-end w-full rounded-2xl gap-4 text-black">
             <div className="relative flex gap-2 w-full">
               <input
@@ -80,6 +142,7 @@ export default function NavBar() {
             <SearchOptions movies={movies} closeOptions={closeSearchOptions} />
           )}
         </div>
+        <NavLinks />
         {loggedIn ? (
           <Profile />
         ) : (
