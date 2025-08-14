@@ -306,3 +306,118 @@ func WatchMovie(c *gin.Context) {
     }
     c.JSON(http.StatusOK, gin.H{"status": "watched"})
 }
+
+// AddToWatchlist handles adding a movie to the authenticated user's watchlist
+func AddToWatchlist(c *gin.Context) {
+    email := c.GetString("email")
+    if email == "" {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+        return
+    }
+
+    // Resolve user id
+    var userID int
+    if err := db.DB.QueryRow("SELECT id FROM users WHERE email=$1", email).Scan(&userID); err != nil {
+        if err == sql.ErrNoRows {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+            return
+        }
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error"})
+        return
+    }
+
+    mediaType := c.Param("media")
+    idStr := c.Param("id")
+    movieID, err := strconv.Atoi(idStr)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid movie id"})
+        return
+    }
+
+    // Add to watchlist idempotently
+    if _, err := db.DB.Exec(
+        "INSERT INTO watchlist (user_id, media_type, movie_id) VALUES ($1,$2,$3) ON CONFLICT (user_id, media_type, movie_id) DO NOTHING",
+        userID, mediaType, movieID,
+    ); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add to watchlist"})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{"status": "added_to_watchlist"})
+}
+
+// GetWatchlist returns the authenticated user's watchlist
+func GetWatchlist(c *gin.Context) {
+    email := c.GetString("email")
+    if email == "" {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+        return
+    }
+
+    var userID int
+    if err := db.DB.QueryRow("SELECT id FROM users WHERE email=$1", email).Scan(&userID); err != nil {
+        if err == sql.ErrNoRows {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+            return
+        }
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error"})
+        return
+    }
+
+    rows, err := db.DB.Query("SELECT media_type, movie_id FROM watchlist WHERE user_id=$1", userID)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error"})
+        return
+    }
+    defer rows.Close()
+
+    type item struct {
+        MediaType string `json:"media_type"`
+        MovieID   int    `json:"movie_id"`
+    }
+    var items []item
+    for rows.Next() {
+        var it item
+        if err := rows.Scan(&it.MediaType, &it.MovieID); err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error"})
+            return
+        }
+        items = append(items, it)
+    }
+    c.JSON(http.StatusOK, gin.H{"items": items})
+}
+
+func Filter(c *gin.Context) {
+    genre := c.Query("genre")
+    apiKey := os.Getenv("TMDB_API_KEY")
+
+    if apiKey == "" {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "TMDB API key not set"})
+        return
+    }
+
+    url := fmt.Sprintf("https://api.themoviedb.org/3/discover/movie?api_key=%s&language=en-US&with_genres=%s", apiKey, genre)
+    fmt.Println("Filtering movies:", url)
+
+    // Make request
+    resp, err := http.Get(url)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to call TMDB API"})
+        return
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+        c.JSON(resp.StatusCode, gin.H{"error": "TMDB API returned non-200 status"})
+        return
+    }
+
+    // Decode JSON response
+    var movies map[string]interface{}
+    if err := json.NewDecoder(resp.Body).Decode(&movies); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode TMDB response"})
+        return
+    }
+
+    // Return JSON
+    c.JSON(http.StatusOK, movies)
+}

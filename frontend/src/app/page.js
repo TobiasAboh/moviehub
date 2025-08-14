@@ -4,8 +4,8 @@ import MovieGrid from "./components/MovieGrid";
 
 export default function Home() {
   return (
-    <div className="h-screen">
-      <div className="flex flex-col overflow-y-auto scrollbar-hide">
+    <div className="min-h-screen">
+      <div className="flex flex-col">
         <Hero />
         <MovieGrid media_type="movie" />
         <MovieGrid media_type="tv" />

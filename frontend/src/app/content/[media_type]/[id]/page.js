@@ -47,7 +47,7 @@ export default function MoviePage({ params }) {
 
   return (
     <div className="flex flex-col items-center w-full mt-5">
-      <div className="flex gap-5 w-[80%]">
+      <div className="flex flex-col lg:flex-row gap-5 w-[80%]">
         {trailer ? (
           <iframe
             width="560"

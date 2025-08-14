@@ -39,6 +39,14 @@ func InitDB() {
             created_at TIMESTAMP DEFAULT NOW(),
             UNIQUE (user_id, media_type, movie_id)
         );
+        CREATE TABLE IF NOT EXISTS watchlist (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            media_type TEXT NOT NULL,
+            movie_id INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT NOW(),
+            UNIQUE (user_id, media_type, movie_id)
+        );
     `)
     if err != nil {
         log.Fatal("Failed to ensure tables exist:", err)

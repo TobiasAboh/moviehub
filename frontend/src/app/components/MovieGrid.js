@@ -2,18 +2,24 @@
 import { useEffect, useState } from "react";
 import MovieCard from "./MovieCard";
 
-const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 export default function MovieGrid({ media_type }) {
   const [movies, setMovies] = useState([]);
   const [likedIds, setLikedIds] = useState(new Set());
   const [watchedIds, setWatchedIds] = useState(new Set());
   useEffect(() => {
+    console.log(
+      `MovieGrid mounted for: ${media_type}, section: ${
+        media_type === "movie" ? "movies-section" : "tv-section"
+      }`
+    );
+
     try {
       async function fetchData() {
         const [popularRes, likesRes, watchedRes] = await Promise.all([
           fetch(`${baseUrl}/popular/${media_type}`),
-          fetch(`${baseUrl}/likes`, { credentials: "include" }),
+          fetch(`${baseUrl}/liked`, { credentials: "include" }),
           fetch(`${baseUrl}/watched`, { credentials: "include" }),
         ]);
 
@@ -52,11 +58,12 @@ export default function MovieGrid({ media_type }) {
     } catch (error) {
       console.log("huuuu", error);
     }
-  }, []);
+  }, [media_type]);
   return (
     <div
       id={media_type === "movie" ? "movies-section" : "tv-section"}
-      className="flex flex-col gap-2 px-5 py-5 w-full scroll-mt-24"
+      className="flex flex-col gap-2 px-5 py-5 w-full scroll-mt-32"
+      data-section={media_type === "movie" ? "movies-section" : "tv-section"}
     >
       <h1 className="text-2xl font-bold">
         Trending {media_type === "movie" ? "Movies" : "TV Shows"}
